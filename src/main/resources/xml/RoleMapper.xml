@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lizhenfang.lizhenfangday01.mapper.RoleMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.lizhenfang.lizhenfangday01.entity.Role">
+        <id column="id" property="id" />
+        <result column="name" property="name" />
+        <result column="nameZh" property="nameZh" />
+        <result column="created" property="created" />
+        <result column="img" property="img" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, name, nameZh,created,img
+    </sql>
+
+    <resultMap id="mapVo" type="com.lizhenfang.lizhenfangday01.entity.RoleVo" extends="BaseResultMap">
+        <result column="names" property="names"></result>
+        <result column="mids" property="mids"></result>
+    </resultMap>
+
+
+    <select id="selectPageVo2" resultMap="mapVo">
+        SELECT
+	    r.*, GROUP_CONCAT(m.`name`) names,
+	    GROUP_CONCAT(m.id) mids
+
+        FROM
+	    role r
+
+        LEFT JOIN menu_role mr ON r.id = mr.rid
+        LEFT JOIN menu m ON m.id=mr.mid
+        <where>
+            <if test="vo!=null">
+                <if test="vo.nameZh!=null and vo.nameZh!=''">
+                    and r.nameZh=#{vo.nameZh}
+                </if>
+
+                <if test="vo.names!=null and vo.names!=''">
+                    and m.name like concat('%',#{vo.names},'%')
+                </if>
+
+                <if test="vo.start1!=null and vo.start1!='' and vo.start2!=null and vo.start2!=''">
+                    and r.created between #{vo.start1} and #{vo.start2}
+                </if>
+            </if>
+        </where>
+        GROUP BY
+	    r.id
+    </select>
+</mapper>

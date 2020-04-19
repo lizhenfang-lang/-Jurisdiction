@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lizhenfang.lizhenfangday01.mapper.UserMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.lizhenfang.lizhenfangday01.entity.User">
+        <id column="id" property="id" />
+        <result column="name" property="name" />
+        <result column="phone" property="phone" />
+        <result column="telephone" property="telephone" />
+        <result column="address" property="address" />
+        <result column="enabled" property="enabled" />
+        <result column="username" property="username" />
+        <result column="password" property="password" />
+        <result column="userface" property="userface" />
+        <result column="remark" property="remark" />
+        <result column="sex" property="sex" />
+        <result column="province" property="province" />
+        <result column="city" property="city" />
+        <result column="district" property="district" />
+        <result column="title" property="title" />
+        <result column="url" property="url" />
+        <result column="created" property="created" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, name, phone, telephone, address, enabled, username, password, userface,
+        remark, sex, province, city, district,title,url,created
+    </sql>
+
+    <resultMap id="mapVo" type="com.lizhenfang.lizhenfangday01.entity.UserVo" extends="BaseResultMap">
+        <result column="nameZhs" property="nameZhs"></result>
+        <result column="rids" property="rids"></result>
+        <result column="names" property="names"></result>
+        <result column="mids" property="mids"></result>
+        <result column="provinceName" property="provinceName"></result>
+        <result column="cityName" property="cityName"></result>
+        <result column="districtName" property="districtName"></result>
+    </resultMap>
+
+    <select id="selectPageVo" resultMap="mapVo">
+       SELECT
+	   u.*, GROUP_CONCAT(r.nameZh) nameZhs,
+	   GROUP_CONCAT(r.id) rids,
+       p.province provinceName,
+       c.city cityName,
+       d.district districtName
+       FROM
+	   `user` u
+        LEFT JOIN nation p ON u.province=p.id
+        LEFT JOIN nation c ON u.city=c.id
+        LEFT JOIN nation d ON u.district=d.id
+        LEFT JOIN user_role ur ON u.id = ur.uid
+        LEFT JOIN role r ON ur.rid = r.id
+        <where>
+          u.enabled=1
+        <if test="vo!=null">
+            <if test="vo.name!=null and vo.name!=''">
+             and u.name like concat('%',#{vo.name},'%')
+            </if>
+            <if test="vo.phone!=null and vo.phone!=''">
+                and u.phone =#{vo.phone}
+            </if>
+            <if test="vo.sex!=null">
+                and u.sex=#{vo.sex}
+            </if>
+        </if>
+    </where>
+    GROUP BY
+        u.id
+        <if test="vo.rids!=null and vo.rids!=''">
+            having
+            <foreach collection="vo.rids.split(',')" item="rid"  separator="and">
+                find_in_set(#{rid},rids)
+            </foreach>
+        </if>
+    </select>
+
+    <update id="updatePassword">
+        update user set password=#{password} where id=#{id}
+    </update>
+</mapper>
